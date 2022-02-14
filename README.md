@@ -1,13 +1,13 @@
 # zsh-comma-assistant
 
-Tighter integration around the [`comma`](/nix-community/comma) utility, so you'll (almost) never get a "command not found" error ever again!
+Tighter integration around the [`comma`](https://github.com/nix-community/comma) utility, so you'll (almost) never get a "command not found" error ever again!
 
 This plugin consists of two parts: a **command not found handler**, and a **syntax highlight addon**.
 
 ## Dependencies
 
-This plugin requires [`nix-index`](/bennofs/nix-index) to be installed and available in `PATH`, as well as for the `nix-index` database to have already been built.
-It also requires [`comma`](/nix-community/comma) (duh) to be installed in `PATH`.
+This plugin requires [`nix-index`](https://github.com/bennofs/nix-index) to be installed and available in `PATH`, as well as for the `nix-index` database to have already been built.
+It also requires [`comma`](https://github.com/nix-community/comma) (duh) to be installed in `PATH`.
 
 ### Syntax highlight
 
@@ -23,7 +23,7 @@ zplug "thesola10/zsh-comma-assistant", defer:3 # (note the higher defer value)
 If you cannot control the plugin install order, the highlight addon can still be enabled by adding it to the active highlighters:
 
 ```zsh
-export ZSH_HIGHLIGHT_HIGHLIGHTERS=(main comma)
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main comma)
 ```
 
 ## Configuration

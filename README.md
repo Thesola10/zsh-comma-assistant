@@ -4,6 +4,9 @@ Tighter integration around the [`comma`](https://github.com/nix-community/comma)
 
 This plugin consists of two parts: a **command not found handler**, and a **syntax highlight addon**.
 
+_See it in action!_
+[![on asciinema](https://raw.githubusercontent.com/thesola10/comma-assistant.zsh/master/demo.svg)](https://asciinema.org/a/469027)
+
 ## Dependencies
 
 This plugin requires [`nix-index`](https://github.com/bennofs/nix-index) to be installed and available in `PATH`, as well as for the `nix-index` database to have already been built.

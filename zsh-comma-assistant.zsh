@@ -56,10 +56,22 @@ function command_not_found_handler() {
 # Update the cached index of /bin commands (i.e. comma commands) because
 # nix-locate is way too slow for a syntax highlighter.
 #
-if which -p nix-locate , >/dev/null 2>&1 &&\
-    ! find "$COMMA_INDEX_LIST_PATH" -newer "$COMMA_INDEX_PATH/files" \
-        | grep ".*" >/dev/null 2>&1
+if which -p nix-locate , >/dev/null 2>&1
 then
-    nix-locate --db $COMMA_INDEX_PATH --at-root /bin/ | cut -d/ -f6 | sort -u > $COMMA_INDEX_LIST_PATH
-    echo "Updated nix commands cache."
+    # Quick setup by downloading prebuilt index
+    if ! [[ -f "$COMMA_INDEX_PATH/files" ]]
+    then
+        local filename="index-$(uname -m)-$(uname | tr A-Z a-z)"
+        mkdir -p $COMMA_INDEX_PATH
+        wget -q -N https://github.com/Mic92/nix-index-database/releases/latest/download/$filename -O "$COMMA_INDEX_PATH/files"
+        echo "Downloaded latest nix-index cache."
+    fi
+
+    # Building our commands cache
+    if ! find "$COMMA_INDEX_LIST_PATH" -newer "$COMMA_INDEX_PATH/files" \
+        | grep ".*" >/dev/null 2>&1
+    then
+        nix-locate --db $COMMA_INDEX_PATH --at-root /bin/ | cut -d/ -f6 | sort -u > $COMMA_INDEX_LIST_PATH
+        echo "Updated nix commands cache."
+    fi
 fi

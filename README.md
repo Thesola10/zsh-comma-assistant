@@ -11,16 +11,9 @@ It also requires [`comma`](https://github.com/nix-community/comma) (duh) to be i
 
 ### Syntax highlight
 
-The syntax highlight addon included in this plugin requires [`zsh-syntax-highlighting`](/zsh-users/zsh-syntax-highlighting) to have been loaded _before_ this plugin.
-On `zplug`, this would be represented as follows:
+The syntax highlight addon included in this plugin requires [`zsh-syntax-highlighting`](/zsh-users/zsh-syntax-highlighting).
 
-```zsh
-zplug "zsh-users/zsh-syntax-highlighting", defer:2
-...
-zplug "thesola10/zsh-comma-assistant", defer:3 # (note the higher defer value)
-```
-
-If you cannot control the plugin install order, the highlight addon can still be enabled by adding it to the active highlighters:
+The highlight addon can be enabled by adding it to the active highlighters:
 
 ```zsh
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main comma)

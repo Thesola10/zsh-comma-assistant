@@ -1,8 +1,6 @@
 # Copyright (c) Karim Vergnes <me@thesola.io>
-#
 # A simple set of integrations for the comma tool from Nix, which runs any
 # command by temporarily copying its Nix derivation.
-# This plugin requires zsh-syntax-highlighting.
 
 # The path to the nix-index database to use
 : ${COMMA_INDEX_PATH:=${XDG_CACHE_HOME:-$HOME/.cache}/nix-index}
@@ -14,6 +12,7 @@
 # Syntax highlighter for zsh-syntax-highlighting.
 #
 
+typeset -gA ZSH_HIGHLIGHT_STYLES
 : ${ZSH_HIGHLIGHT_STYLES[comma:cmd]:=fg=blue}
 
 function _zsh_highlight_highlighter_comma_predicate() {
@@ -34,10 +33,6 @@ function _zsh_highlight_highlighter_comma_paint() {
         _zsh_highlight_add_highlight 0 ${#args[1]} unknown-token
     fi
 }
-
-# Update default highlighters list
-ZSH_HIGHLIGHT_HIGHLIGHTERS+=(comma)
-export ZSH_HIGHLIGHT_HIGHLIGHTERS
 
 #
 # Command not found handler, to try and run the command thru comma

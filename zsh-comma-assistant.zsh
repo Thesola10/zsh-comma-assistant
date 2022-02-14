@@ -5,7 +5,7 @@
 # This plugin requires zsh-syntax-highlighting.
 
 # The path to the nix-index database to use
-: ${COMMA_INDEX_PATH:=${XDG_CACHE_HOME:$HOME/.cache}/nix-index}
+: ${COMMA_INDEX_PATH:=${XDG_CACHE_HOME:-$HOME/.cache}/nix-index}
 
 # The default path for our commands list is next to nix-index's default db
 : ${COMMA_INDEX_LIST_PATH:=$COMMA_INDEX_PATH/cmds}
@@ -36,8 +36,8 @@ function _zsh_highlight_highlighter_comma_paint() {
 }
 
 # Update default highlighters list
-ZSH_SYNTAX_HIGHLIGHTERS+=comma
-export ZSH_SYNTAX_HIGHLIGHTERS
+ZSH_HIGHLIGHT_HIGHLIGHTERS+=(comma)
+export ZSH_HIGHLIGHT_HIGHLIGHTERS
 
 #
 # Command not found handler, to try and run the command thru comma

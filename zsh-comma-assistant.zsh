@@ -66,7 +66,10 @@ then
     if ! find "$COMMA_INDEX_LIST_PATH" -newer "$COMMA_INDEX_PATH/files" \
         | grep ".*" >/dev/null 2>&1
     then
-        nix-locate --db $COMMA_INDEX_PATH --at-root /bin/ | cut -d/ -f6 | sort -u > $COMMA_INDEX_LIST_PATH
+        nix-locate --db $COMMA_INDEX_PATH --at-root /bin/ \
+            | cut -d/ -f6 | sort -u \
+            | grep -v "^\\..*\\-wrapped\$" \
+            > $COMMA_INDEX_LIST_PATH
         echo "Updated nix commands cache."
     fi
 fi

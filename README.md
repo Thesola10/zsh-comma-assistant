@@ -14,7 +14,7 @@ It also requires [`comma`](https://github.com/nix-community/comma) (duh) to be i
 
 ### Syntax highlight
 
-The syntax highlight addon included in this plugin requires [`zsh-syntax-highlighting`](/zsh-users/zsh-syntax-highlighting).
+The syntax highlight addon included in this plugin requires [`zsh-syntax-highlighting`](https://github.com/zsh-users/zsh-syntax-highlighting).
 
 The highlight addon can be enabled by adding it to the active highlighters:
 

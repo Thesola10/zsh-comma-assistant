@@ -29,8 +29,6 @@ function _zsh_highlight_highlighter_comma_paint() {
     if grep -Fx "${args[1]}" "$COMMA_INDEX_LIST_PATH" >/dev/null 2>&1
     then
         _zsh_highlight_add_highlight 0 ${#args[1]} comma:cmd
-    else
-        _zsh_highlight_add_highlight 0 ${#args[1]} unknown-token
     fi
 }
 
@@ -45,6 +43,17 @@ function command_not_found_handler() {
 
     printf "zsh: command not found: $1\n"
     return 127          # Pretend we're the default notfound
+}
+
+#
+# Quick wrapper around nix-locate to find who a command belongs to
+#
+function where,() {
+    if ! nix-locate --at-root -1w "/bin/${1}" | grep -v '^(.*)$'
+    then
+        >&2 echo "${1}: no match."
+        return 1
+    fi
 }
 
 #

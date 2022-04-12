@@ -21,12 +21,15 @@ function _zsh_highlight_highlighter_comma_predicate() {
 
 function _zsh_highlight_highlighter_comma_paint() {
     setopt localoptions extendedglob
-    local -a args
+    local -a args aliasbuf aliasargs
     args=(${(z)BUFFER})
+    aliasbuf=${aliases[${args[1]}]}
+    aliasargs=(${(z)aliasbuf})
 
     # If a command exists, don't overwrite the main highlighter
-    whence "${args[1]}" >/dev/null 2>&1 && return
-    if grep -Fx "${args[1]}" "$COMMA_INDEX_LIST_PATH" >/dev/null 2>&1
+    ! alias "${args[1]}" &>/dev/null && whence "${args[1]}" &>/dev/null && return
+    if grep -Fx "${args[1]}" "$COMMA_INDEX_LIST_PATH" &>/dev/null \
+        || grep -Fx "${aliasargs[1]}" "$COMMA_INDEX_LIST_PATH" &>/dev/null
     then
         _zsh_highlight_add_highlight 0 ${#args[1]} comma:cmd
     fi

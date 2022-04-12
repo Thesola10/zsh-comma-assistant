@@ -27,7 +27,10 @@ function _zsh_highlight_highlighter_comma_paint() {
     aliasargs=(${(z)aliasbuf})
 
     # If a command exists, don't overwrite the main highlighter
-    ! alias "${args[1]}" &>/dev/null && whence "${args[1]}" &>/dev/null && return
+    if alias "${args[1]}" &>/dev/null
+        then whence "${aliasargs[1]}" &>/dev/null   && return
+        else whence "${args[1]}" &>/dev/null        && return
+    fi
     if grep -Fx "${args[1]}" "$COMMA_INDEX_LIST_PATH" &>/dev/null \
         || grep -Fx "${aliasargs[1]}" "$COMMA_INDEX_LIST_PATH" &>/dev/null
     then

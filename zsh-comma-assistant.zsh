@@ -27,7 +27,7 @@ function _zsh_highlight_highlighter_comma_paint() {
     aliasargs=(${(z)aliasbuf})
 
     # If a command exists, don't overwrite the main highlighter
-    if alias "${args[1]}" &>/dev/null
+    if (( ${+aliases[${args[1]}]} ))
         then whence "${aliasargs[1]}" &>/dev/null   && return
         else whence "${args[1]}" &>/dev/null        && return
     fi

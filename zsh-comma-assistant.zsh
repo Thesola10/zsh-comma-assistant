@@ -55,10 +55,39 @@ function command_not_found_handler() {
 # Quick wrapper around nix-locate to find who a command belongs to
 #
 function where,() {
-    if ! nix-locate --at-root -1w "/bin/${1}" | grep -v '^(.*)$'
+    bold="$(tput bold)"
+    ita="$(tput sitm)"
+    reset="$(tput sgr0)"
+    if ! items=($(nix-locate --at-root -1w "/bin/${1}" | grep -v '^(.*)$'))
     then
         >&2 echo "${1}: no match."
         return 1
+    else
+        for item in $items
+        do
+            printf "$bold%s$reset:\n$ita%s$reset\n"   \
+                "$item"                             \
+                "$(nix eval --raw nixpkgs#${item//\.out/.meta}.description | fmt | awk '{ print "\t" $0 }')"
+        done
+    fi
+}
+
+#
+# Wrapper around nix-locate to retrieve man pages from Nix.
+# NOTE: Nixpkgs doesn't appear to use a separate input for man pages alone,
+#       so this may take up lots of unnecessary disk space.
+#
+function man,() {
+    if ! items=($(nix-locate --at-root -1r "/share/man/man[1-9]/${1}.[1-9].gz" | grep -v '^(.*)$'))
+    then
+        >&2 echo "No man page on nix for '$1'."
+    else
+        if [[ $#items > 1 ]]
+        then item=$(printf '%s\n' "${items[@]}" | fzy)
+        else item=${items[1]}
+        fi
+        nix --extra-experimental-features 'nix-command flakes' \
+            shell "nixpkgs#$item" -c man "$@"
     fi
 }
 

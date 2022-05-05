@@ -81,6 +81,7 @@ function man,() {
     if ! items=($(nix-locate --at-root -1r "/share/man/man[1-9]/${1}.[1-9].gz" | grep -v '^(.*)$'))
     then
         >&2 echo "No man page on nix for '$1'."
+        return 1
     else
         if [[ $#items > 1 ]]
         then item=$(printf '%s\n' "${items[@]}" | fzy)

@@ -67,7 +67,9 @@ function where,() {
         do
             printf "$bold%s$reset:\n$ita%s$reset\n"   \
                 "$item"                             \
-                "$(nix eval --raw nixpkgs#${item//\.out/.meta}.description | fmt | awk '{ print "\t" $0 }')"
+                "$(nix --extra-experimental-features 'nix-command flakes' \
+                        eval --raw nixpkgs#${item//\.out/.meta}.description \
+                    | fmt | awk '{ print "\t" $0 }')"
         done
     fi
 }

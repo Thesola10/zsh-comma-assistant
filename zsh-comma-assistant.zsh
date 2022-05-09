@@ -65,8 +65,10 @@ function where,() {
     else
         for item in $items
         do
-            printf "$bold%s$reset:\n$ita%s$reset\n"   \
-                "$item"                             \
+            printf "$bold%s$reset (%s):\n$ita%s$reset\n"                  \
+                "$(nix --extra-experimental-features 'nix-command flakes' \
+                        eval --raw nixpkgs#${item//\.out/.meta}.name)"    \
+                "$item"                                                   \
                 "$(nix --extra-experimental-features 'nix-command flakes' \
                         eval --raw nixpkgs#${item//\.out/.meta}.description \
                     | fmt | awk '{ print "\t" $0 }')"

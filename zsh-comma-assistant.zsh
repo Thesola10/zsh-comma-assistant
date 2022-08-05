@@ -42,13 +42,24 @@ function _zsh_highlight_highlighter_comma_paint() {
 # Command not found handler, to try and run the command thru comma
 #
 
+if whence -f command_not_found_handler >&/dev/null
+then
+    # If a command_not_found_handler already exists, rename it
+    eval "_cnf_old() { $(whence -f command_not_found_handler | tail -n +2)"
+fi
+
 function command_not_found_handler() {
-    which -p , >/dev/null 2>&1 && \
-    grep -Fx "$1" "$COMMA_INDEX_LIST_PATH" >/dev/null 2>&1 && \
+    which -p , >&/dev/null && \
+    grep -Fx "$1" "$COMMA_INDEX_LIST_PATH" >&/dev/null && \
     { , "$@"; return }  # Execute comma command with its exit code
 
-    printf "zsh: command not found: $1\n"
-    return 127          # Pretend we're the default notfound
+    if which _cnf_old >&/dev/null
+    then
+        _cnf_old "$@"   # Load backup notfound
+    else
+        printf "zsh: command not found: $1\n"
+        return 127      # Pretend we're the default notfound
+    fi
 }
 
 #

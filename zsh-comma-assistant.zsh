@@ -69,7 +69,7 @@ function where,() {
     bold="$(tput bold)"
     ita="$(tput sitm)"
     reset="$(tput sgr0)"
-    if ! items=($(nix-locate --at-root -1w "/bin/${1}" | grep -v '^(.*)$'))
+    if ! items=($(nix-locate --at-root --minimal -w "/bin/${1}" | grep -v '^(.*)$'))
     then
         >&2 echo "${1}: no match."
         return 1
@@ -93,7 +93,7 @@ function where,() {
 #       so this may take up lots of unnecessary disk space.
 #
 function man,() {
-    if ! items=($(nix-locate --at-root -1r "/share/man/man[1-9]/${1}.[1-9].gz" | grep -v '^(.*)$'))
+    if ! items=($(nix-locate --at-root --minimal -r "/share/man/man[1-9]/${1}.[1-9].gz" | grep -v '^(.*)$'))
     then
         >&2 echo "No man page on nix for '$1'."
         return 1

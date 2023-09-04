@@ -8,9 +8,9 @@
 # The default path for our commands list is next to nix-index's default db
 : ${COMMA_INDEX_LIST_PATH:=$COMMA_INDEX_PATH/cmds}
 
-#
-# Syntax highlighter for zsh-syntax-highlighting.
-#
+#############
+# HIGHLIGHT #   Syntax highlighter for zsh-syntax-highlighting.
+#############
 
 typeset -gA ZSH_HIGHLIGHT_STYLES
 : ${ZSH_HIGHLIGHT_STYLES[comma:cmd]:=fg=blue}
@@ -38,12 +38,12 @@ function _zsh_highlight_comma_highlighter_set_highlight() {
 
 function _zsh_highlight_highlighter_comma_paint() {
     setopt localoptions extendedglob
-    local -a reply 
+    local -a reply
     local start end_ style off
     local ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW
 
-    ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=('|' '||' ';' '&' '&&' $'\n' '|&' '&!' '&|') 
-    ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW=($'\x7b' $'\x28' '()' 'while' 'until' 'if' 'then' 'elif' 'else' 'do' 'time' 'coproc' '!') 
+    ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=('|' '||' ';' '&' '&&' $'\n' '|&' '&!' '&|')
+    ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW=($'\x7b' $'\x28' '()' 'while' 'until' 'if' 'then' 'elif' 'else' 'do' 'time' 'coproc' '!')
     _zsh_highlight_main_highlighter_highlight_list -0 '' 1 "$BUFFER" &>/dev/null
 
     off=0
@@ -54,9 +54,9 @@ function _zsh_highlight_highlighter_comma_paint() {
     done
 }
 
-#
-# Command not found handler, to try and run the command thru comma
-#
+#############
+#  HANDLER  #   Command not found handler, to try and run the command thru comma
+#############
 
 if whence -f command_not_found_handler >&/dev/null
 then
@@ -77,6 +77,10 @@ function command_not_found_handler() {
         return 127      # Pretend we're the default notfound
     fi
 }
+
+#############
+# UTILITIES #   User-available utility commands
+#############
 
 #
 # Quick wrapper around nix-locate to find who a command belongs to
@@ -124,17 +128,16 @@ function man,() {
 }
 
 #
-# Update the cached index of /bin commands (i.e. comma commands) because
-# nix-locate is way too slow for a syntax highlighter.
+# Download an up-to-date prebuilt nix-index database from GitHub.
+# We also build a cached index of /bin commands since nix-locate is way too
+# slow for syntax highlighting
 #
-if which -p nix-locate , >/dev/null 2>&1
-then
-    # Quick setup by downloading prebuilt index
-    if ! [[ -f "$COMMA_INDEX_PATH/files" ]]
+function refresh-index() {
+    if ! ( ((auto)) && [[ -f "$COMMA_INDEX_PATH/files" ]] )
     then
         local filename="index-$(uname -m)-$(uname | tr A-Z a-z)"
         mkdir -p $COMMA_INDEX_PATH
-        wget -q -N https://github.com/Mic92/nix-index-database/releases/latest/download/$filename -O "$COMMA_INDEX_PATH/files"
+        wget -q --show-progress -N https://github.com/Mic92/nix-index-database/releases/latest/download/$filename -O "$COMMA_INDEX_PATH/files"
         echo "Downloaded latest nix-index cache."
     fi
 
@@ -148,4 +151,9 @@ then
             > $COMMA_INDEX_LIST_PATH
         echo "Updated nix commands cache."
     fi
+}
+
+if which -p nix-locate , >/dev/null 2>&1
+then
+    auto=1 refresh-index
 fi

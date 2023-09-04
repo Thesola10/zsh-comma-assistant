@@ -19,23 +19,39 @@ function _zsh_highlight_highlighter_comma_predicate() {
     which -p , >/dev/null 2>&1
 }
 
+function _zsh_highlight_comma_highlighter_set_highlight() {
+    local bufword start_
+    start_=$((start + off))
+    bufword=${(MS)${BUFFER[$start_,$end_]}##[[:graph:]]##}
+    if [[ $style == "unknown-token" ]]
+    then
+        local aliasbuf aliasargs
+        aliasbuf=${aliases[$bufword]}
+        aliasargs=(${(z)aliasbuf})
+        if grep -Fx "${aliasargs[1]}" "$COMMA_INDEX_LIST_PATH" &>/dev/null \
+          || grep -Fx "$bufword" "$COMMA_INDEX_LIST_PATH" &>/dev/null
+        then
+            _zsh_highlight_add_highlight $start $end_ comma:cmd
+        fi
+    fi
+}
+
 function _zsh_highlight_highlighter_comma_paint() {
     setopt localoptions extendedglob
-    local -a args aliasbuf aliasargs
-    args=(${(z)BUFFER})
-    aliasbuf=${aliases[${args[1]}]}
-    aliasargs=(${(z)aliasbuf})
+    local -a reply 
+    local start end_ style off
+    local ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW
 
-    # If a command exists, don't overwrite the main highlighter
-    if (( ${+aliases[${args[1]}]} ))
-        then whence "${aliasargs[1]}" &>/dev/null   && return
-        else whence "${args[1]}" &>/dev/null        && return
-    fi
-    if grep -Fx "${args[1]}" "$COMMA_INDEX_LIST_PATH" &>/dev/null \
-        || grep -Fx "${aliasargs[1]}" "$COMMA_INDEX_LIST_PATH" &>/dev/null
-    then
-        _zsh_highlight_add_highlight 0 ${#args[1]} comma:cmd
-    fi
+    ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=('|' '||' ';' '&' '&&' $'\n' '|&' '&!' '&|') 
+    ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW=($'\x7b' $'\x28' '()' 'while' 'until' 'if' 'then' 'elif' 'else' 'do' 'time' 'coproc' '!') 
+    _zsh_highlight_main_highlighter_highlight_list -0 '' 1 "$BUFFER" &>/dev/null
+
+    off=0
+    for start end_ style in $reply
+    do
+        _zsh_highlight_comma_highlighter_set_highlight
+        off=1
+    done
 }
 
 #

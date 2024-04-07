@@ -8,6 +8,9 @@
 # The default path for our commands list is next to nix-index's default db
 : ${COMMA_INDEX_LIST_PATH:=$COMMA_INDEX_PATH/cmds}
 
+# The default path for our pretty commands list (autosuggest) too
+: ${COMMA_INDEX_PRETTY_LIST_PATH:=$COMMA_INDEX_PATH/prettycmds}
+
 #############
 # HIGHLIGHT #   Syntax highlighter for zsh-syntax-highlighting.
 #############
@@ -20,6 +23,7 @@ function _zsh_highlight_highlighter_comma_predicate() {
 }
 
 function _zsh_highlight_comma_highlighter_set_highlight() {
+    setopt localoptions extendedglob
     local bufword start_
     start_=$((start + off))
     bufword=${(MS)${BUFFER[$start_,$end_]}##[[:graph:]]##}
@@ -28,8 +32,8 @@ function _zsh_highlight_comma_highlighter_set_highlight() {
         local aliasbuf aliasargs
         aliasbuf=${aliases[$bufword]}
         aliasargs=(${(z)aliasbuf})
-        if grep -Fx "${aliasargs[1]}" "$COMMA_INDEX_LIST_PATH" &>/dev/null \
-          || grep -Fx "$bufword" "$COMMA_INDEX_LIST_PATH" &>/dev/null
+        if grep -Fx "${aliasargs[1]}" "$COMMA_INDEX_LIST_PATH" >&/dev/null \
+          || grep -Fx "$bufword" "$COMMA_INDEX_LIST_PATH" >&/dev/null
         then
             _zsh_highlight_add_highlight $start $end_ comma:cmd
         fi
@@ -37,14 +41,16 @@ function _zsh_highlight_comma_highlighter_set_highlight() {
 }
 
 function _zsh_highlight_highlighter_comma_paint() {
+    emulate -RL zsh
     setopt localoptions extendedglob
+    [[ $CONTEXT == (select|vared) ]] && return
     local -a reply
     local start end_ style off
     local ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW
 
     ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=('|' '||' ';' '&' '&&' $'\n' '|&' '&!' '&|')
     ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW=($'\x7b' $'\x28' '()' 'while' 'until' 'if' 'then' 'elif' 'else' 'do' 'time' 'coproc' '!')
-    _zsh_highlight_main_highlighter_highlight_list -0 '' 1 "$BUFFER" &>/dev/null
+    _zsh_highlight_main_highlighter_highlight_list -$#PREBUFFER '' 1 "$PREBUFFER$BUFFER" >&/dev/null
 
     off=0
     for start end_ style in $reply
@@ -52,6 +58,18 @@ function _zsh_highlight_highlighter_comma_paint() {
         _zsh_highlight_comma_highlighter_set_highlight
         off=1
     done
+}
+
+function _zsh_autosuggest_strategy_comma() {
+    emulate -L zsh
+    local zcmd=(${(z)1})
+    local tab=$'\t'
+
+    if (! which -p $zcmd >&/dev/null) &&\
+        match="$(grep -Fw "$zcmd$tab" "$COMMA_INDEX_PRETTY_LIST_PATH")"
+    then
+        typeset -g suggestion="$@ # ${match##*$'\t'}"
+    fi
 }
 
 #############
@@ -86,6 +104,11 @@ function command_not_found_handler() {
 # Quick wrapper around nix-locate to find who a command belongs to
 #
 function where,() {
+    ((COMMA_ASSISTANT_NO_DEPS)) && {
+        >&2 echo "zsh-comma-assistant requires comma and nix-index, but they were not found."
+        >&2 echo "This command will not work until all dependencies are satisfied."
+        return 1
+    }
     bold="$(tput bold)"
     ita="$(tput sitm)"
     reset="$(tput sgr0)"
@@ -113,6 +136,11 @@ function where,() {
 #       so this may take up lots of unnecessary disk space.
 #
 function man,() {
+    ((COMMA_ASSISTANT_NO_DEPS)) && {
+        >&2 echo "zsh-comma-assistant requires comma and nix-index, but they were not found."
+        >&2 echo "This command will not work until all dependencies are satisfied."
+        return 1
+    }
     if ! items=($(nix-locate --at-root --minimal -r "/share/man/man[1-9]/${1}.[1-9].gz" | grep -v '^(.*)$'))
     then
         >&2 echo "No man page on nix for '$1'."
@@ -133,6 +161,12 @@ function man,() {
 # slow for syntax highlighting
 #
 function refresh-index() {
+    ((!auto)) && ((COMMA_ASSISTANT_NO_DEPS)) && {
+        >&2 echo "zsh-comma-assistant requires comma and nix-index, but they were not found."
+        >&2 echo "This command will not work until all dependencies are satisfied."
+        return 1
+    }
+
     if ! ( ((auto)) && [[ -f "$COMMA_INDEX_PATH/files" ]] )
     then
         local filename="index-$(uname -m)-$(uname | tr A-Z a-z)"
@@ -143,7 +177,7 @@ function refresh-index() {
 
     # Building our commands cache
     if ! find "$COMMA_INDEX_LIST_PATH" -newer "$COMMA_INDEX_PATH/files" \
-        | grep ".*" >/dev/null 2>&1
+        | grep ".*" >&/dev/null
     then
         nix-locate --db $COMMA_INDEX_PATH --at-root /bin/ \
             | cut -d/ -f6 | sort -u \
@@ -151,9 +185,31 @@ function refresh-index() {
             > $COMMA_INDEX_LIST_PATH
         echo "Updated nix commands cache."
     fi
+
+    # Building our pretty cache if zsh-autosuggestions is installed
+    if ((HAS_AUTOSUGGEST))
+    then
+        if ! find "$COMMA_INDEX_PRETTY_LIST_PATH" -newer "$COMMA_INDEX_PATH/files" \
+            | grep ".*" >&/dev/null
+        then
+            0=${(%):-%N}
+            nix-locate --db $COMMA_INDEX_PATH --at-root /bin/ \
+                | python3 ${0:A:h}/nix-index-pretty.py \
+                > $COMMA_INDEX_PRETTY_LIST_PATH
+            echo "Updated pretty nix commands cache."
+        fi
+    fi
 }
+
+if which _zsh_autosuggest_suggest >/dev/null 2>&1
+then
+    HAS_AUTOSUGGEST=1
+fi
 
 if which -p nix-locate , >/dev/null 2>&1
 then
     auto=1 refresh-index
+else
+    COMMA_ASSISTANT_NO_DEPS=1
 fi
+

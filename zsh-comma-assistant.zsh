@@ -11,6 +11,9 @@
 # The default path for our pretty commands list (autosuggest) too
 : ${COMMA_INDEX_PRETTY_LIST_PATH:=$COMMA_INDEX_PATH/prettycmds}
 
+# Whether to enable the autosuggest feature. Default is yes.
+: ${COMMA_ASSISTANT_USE_AUTOSUGGEST:=1}
+
 #############
 # HIGHLIGHT #   Syntax highlighter for zsh-syntax-highlighting.
 #############
@@ -66,7 +69,7 @@ function _zsh_autosuggest_strategy_comma() {
     local tab=$'\t'
 
     if (! which -p $zcmd >&/dev/null) &&\
-        match="$(grep -Fw "$zcmd$tab" "$COMMA_INDEX_PRETTY_LIST_PATH")"
+        match="$(grep -Fw "$zcmd$tab" "$COMMA_INDEX_PRETTY_LIST_PATH" 2>/dev/null)"
     then
         typeset -g suggestion="$@ # ${match##*$'\t'}"
     fi
@@ -187,12 +190,12 @@ function refresh-index() {
     fi
 
     # Building our pretty cache if zsh-autosuggestions is installed
-    if ((HAS_AUTOSUGGEST))
+    if ((COMMA_ASSISTANT_USE_AUTOSUGGEST))
     then
         if ! find "$COMMA_INDEX_PRETTY_LIST_PATH" -newer "$COMMA_INDEX_PATH/files" \
             | grep ".*" >&/dev/null
         then
-            0=${(%):-%N}
+            0="/$(whence -v refresh-index | cut -d/ -f 2-)"
             nix-locate --db $COMMA_INDEX_PATH --at-root /bin/ \
                 | python3 ${0:A:h}/nix-index-pretty.py \
                 > $COMMA_INDEX_PRETTY_LIST_PATH
@@ -201,15 +204,10 @@ function refresh-index() {
     fi
 }
 
-if which _zsh_autosuggest_suggest >/dev/null 2>&1
-then
-    HAS_AUTOSUGGEST=1
-fi
-
 if which -p nix-locate , >/dev/null 2>&1
 then
     auto=1 refresh-index
 else
-    COMMA_ASSISTANT_NO_DEPS=1
+    export COMMA_ASSISTANT_NO_DEPS=1
 fi
 

@@ -68,10 +68,14 @@ function _zsh_autosuggest_strategy_comma() {
     local zcmd=(${(z)1})
     local tab=$'\t'
 
-    if (! which $zcmd >&/dev/null) &&\
-        match="$(grep -w "^$zcmd$tab" "$COMMA_INDEX_PRETTY_LIST_PATH" 2>/dev/null)"
+    which $zcmd >&/dev/null && return
+
+    if match="$(grep -w "^$zcmd$tab" "$COMMA_INDEX_PRETTY_LIST_PATH" 2>/dev/null)"
     then
         typeset -g suggestion="$@ # ${match##*$'\t'}"
+    elif grep -Fx "$zcmd" "$COMMA_INDEX_LIST_PATH" >&/dev/null
+    then
+        typeset -g suggestion="$@ # (from multiple sources)"
     fi
 }
 

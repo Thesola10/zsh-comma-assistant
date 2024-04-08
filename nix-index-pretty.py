@@ -26,7 +26,6 @@ while True:
         elif cmd in matches.keys():
             matches.pop(cmd)
             multis.append(cmd)
-            print(f"{cmd}\t(from multiple sources)")
         else:
             matches.update({cmd: pkg})
 

@@ -48,12 +48,17 @@ function _zsh_highlight_highlighter_comma_paint() {
     setopt localoptions extendedglob
     [[ $CONTEXT == (select|vared) ]] && return
     local -a reply
+    local rep
     local start end_ style off
     local ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW
 
     ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=('|' '||' ';' '&' '&&' $'\n' '|&' '&!' '&|')
     ZSH_HIGHLIGHT_TOKENS_CONTROL_FLOW=($'\x7b' $'\x28' '()' 'while' 'until' 'if' 'then' 'elif' 'else' 'do' 'time' 'coproc' '!')
-    _zsh_highlight_main_highlighter_highlight_list -$#PREBUFFER '' 1 "$PREBUFFER$BUFFER" >&/dev/null
+
+    # Subshell to prevent unwanted variable assignments.
+    # Fixes #7
+    rep=$( (_zsh_highlight_main_highlighter_highlight_list -$#PREBUFFER '' 1 "$PREBUFFER$BUFFER" >&/dev/null; echo $reply;) )
+    reply=(${=rep})
 
     off=0
     for start end_ style in $reply

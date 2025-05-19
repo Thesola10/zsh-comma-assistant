@@ -183,7 +183,7 @@ function refresh-index() {
     then
         local filename="index-$(uname -m)-$(uname | tr A-Z a-z)"
         mkdir -p $COMMA_INDEX_PATH
-        wget -q --progress=bar --force-progress -N https://github.com/nix-community/nix-index-database/releases/latest/download/$filename -O "$COMMA_INDEX_PATH/files"
+        wget -q --progress=bar -N https://github.com/nix-community/nix-index-database/releases/latest/download/$filename -O "$COMMA_INDEX_PATH/files"
         echo "Downloaded latest nix-index cache."
     fi
 
